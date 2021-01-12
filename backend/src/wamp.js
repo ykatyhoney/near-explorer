@@ -58,52 +58,77 @@ const saveNodeIntoDatabase = async (nodeInfo) => {
 };
 
 wampHandlers["select"] = async ([query, replacements]) => {
-  return await models.sequelizeLegacySyncBackendReadOnly.query(query, {
+  console.log("SELECT START", new Date(), query, replacements);
+  const result = await models.sequelizeLegacySyncBackendReadOnly.query(query, {
     replacements,
     type: models.Sequelize.QueryTypes.SELECT,
   });
+  console.log("SELECT END", new Date(), query, replacements);
+  return result;
 };
 
 wampHandlers["select:INDEXER_BACKEND"] = async ([query, replacements]) => {
-  return await models.sequelizeIndexerBackendReadOnly.query(query, {
+  console.log("SELECT INDEXER START", new Date(), query, replacements);
+  const result = await models.sequelizeIndexerBackendReadOnly.query(query, {
     replacements,
     type: models.Sequelize.QueryTypes.SELECT,
   });
+  console.log("SELECT INDEXER END", new Date(), query, replacements);
+  return result;
 };
 
 wampHandlers["nearcore-view-account"] = async ([accountId]) => {
-  return await nearRpc.sendJsonRpc("query", {
+  console.log("VIEW ACCOUNT START", new Date(), accountId);
+  const result = await nearRpc.sendJsonRpc("query", {
     request_type: "view_account",
     finality: "final",
     account_id: accountId,
   });
+  console.log("VIEW ACCOUNT END", new Date(), accountId);
+  return result;
 };
 
 wampHandlers["nearcore-view-access-key-list"] = async ([accountId]) => {
-  return await nearRpc.sendJsonRpc("query", {
+  console.log("VIEW ACCESS KEY LIST START", new Date(), accountId);
+  const result = await nearRpc.sendJsonRpc("query", {
     request_type: "view_access_key_list",
     finality: "final",
     account_id: accountId,
   });
+  console.log("VIEW ACCESS KEY LIST END", new Date(), accountId);
+  return result;
 };
 
 wampHandlers["nearcore-tx"] = async ([transactionHash, accountId]) => {
-  return await nearRpc.sendJsonRpc("tx", [transactionHash, accountId]);
+  console.log("TX START", new Date(), transactionHash, accountId);
+  const result = await nearRpc.sendJsonRpc("tx", [transactionHash, accountId]);
+  console.log("TX END", new Date(), transactionHash, accountId);
+  return result;
 };
 
 wampHandlers["nearcore-final-block"] = async () => {
-  return await nearRpc.sendJsonRpc("block", { finality: "final" });
+  console.log("FINAL BLOCK START", new Date());
+  const result = await nearRpc.sendJsonRpc("block", { finality: "final" });
+  console.log("FINAL BLOCK END", new Date());
+  return result;
 };
 
 wampHandlers["nearcore-status"] = async () => {
-  return await nearRpc.sendJsonRpc("status");
+  console.log("STATUS START", new Date());
+  const result = await nearRpc.sendJsonRpc("status");
+  console.log("STATUS END", new Date());
+  return result;
 };
 
 wampHandlers["nearcore-validators"] = async () => {
-  return await nearRpc.sendJsonRpc("validators", [null]);
+  console.log("VALIDATORS START", new Date());
+  const result = await nearRpc.sendJsonRpc("validators", [null]);
+  console.log("VALIDATORS END", new Date());
+  return result;
 };
 
 wampHandlers["get-account-details"] = async ([accountId]) => {
+  console.log("GET ACCOUNT DETAILS START", new Date(), accountId);
   function generateLockupAccountIdFromAccountId(accountId) {
     // copied from https://github.com/near/near-wallet/blob/f52a3b1a72b901d87ab2c9cee79770d697be2bd9/src/utils/wallet.js#L601
     return (
@@ -228,38 +253,47 @@ wampHandlers["get-account-details"] = async ([accountId]) => {
 
   accountDetails.totalBalance = totalBalance.toString();
 
+  console.log("GET ACCOUNT DETAILS END", new Date(), accountId);
   return accountDetails;
 };
 
 wampHandlers["transactions-count-aggregated-by-date"] = async () => {
+  console.log("STATS tx count", new Date(), accountId);
   return await stats.getTransactionsByDate();
 };
 
 wampHandlers["teragas-used-aggregated-by-date"] = async () => {
+  console.log("STATS gas", new Date(), accountId);
   return await stats.getTeragasUsedByDate();
 };
 
 wampHandlers["new-accounts-count-aggregated-by-date"] = async () => {
+  console.log("STATS new accounts", new Date(), accountId);
   return await stats.getNewAccountsCountByDate();
 };
 
 wampHandlers["new-contracts-count-aggregated-by-date"] = async () => {
+  console.log("STATS new contracts", new Date(), accountId);
   return await stats.getNewContractsCountByDate();
 };
 
 wampHandlers["active-contracts-count-aggregated-by-date"] = async () => {
+  console.log("STATS active contracts", new Date(), accountId);
   return await stats.getActiveContractsCountByDate();
 };
 
 wampHandlers["active-accounts-count-aggregated-by-date"] = async () => {
+  console.log("STATS active accounts", new Date(), accountId);
   return await stats.getActiveAccountsCountByDate();
 };
 
 wampHandlers["active-accounts-list"] = async () => {
+  console.log("STATS accounts list", new Date(), accountId);
   return await stats.getActiveAccountsList();
 };
 
 wampHandlers["active-contracts-list"] = async () => {
+  console.log("STATS contracts list", new Date(), accountId);
   return await stats.getActiveContractsList();
 };
 
