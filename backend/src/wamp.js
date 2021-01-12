@@ -59,6 +59,12 @@ const saveNodeIntoDatabase = async (nodeInfo) => {
 
 wampHandlers["select"] = async ([query, replacements]) => {
   console.log("SELECT START", new Date(), query, replacements);
+  if (query.includes("json_extract")) {
+    console.log("SELECT BANNED json_extract");
+    throw Error(
+      "this query causes Explorer sluggishness, we banned it. Please, reach us out at https://github.com/near/near-explorer/discussions"
+    );
+  }
   const result = await models.sequelizeLegacySyncBackendReadOnly.query(query, {
     replacements,
     type: models.Sequelize.QueryTypes.SELECT,
