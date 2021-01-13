@@ -26,7 +26,8 @@ wampHandlers["node-telemetry"] = async ([nodeInfo]) => {
   } else {
     console.warn("Node Telemetry failed to lookup geoIP for ", nodeInfo);
   }
-  return saveNodeIntoDatabase(nodeInfo);
+  return;
+  //return saveNodeIntoDatabase(nodeInfo);
 };
 
 const saveNodeIntoDatabase = async (nodeInfo) => {
