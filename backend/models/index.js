@@ -14,7 +14,8 @@ const sequelizeLegacySyncBackend = new Sequelize(
   dbConfig.legacySyncDatabase.password,
   {
     ...dbConfig.legacySyncDatabase,
-    logging: false,
+    //logging: false,
+    benchmark: true,
   }
 );
 
@@ -31,7 +32,8 @@ const sequelizeLegacySyncBackendReadOnly = new Sequelize(
       // * http://www.sqlite.org/c3ref/c_open_autoproxy.html
       mode: 1,
     },
-    logging: false,
+    //logging: false,
+    benchmark: true,
   }
 );
 
