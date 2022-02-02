@@ -1,11 +1,9 @@
 import { NextApiHandler } from "next";
-import { getNearNetwork } from "../../libraries/config";
-import wampApi from "../../libraries/wamp/api";
+import { ExplorerApi } from "../../libraries/explorer-wamp";
 
 const handler: NextApiHandler = async (req, res) => {
   try {
-    const nearNetwork = getNearNetwork(req);
-    await wampApi.getCall(nearNetwork)("nearcore-status", []);
+    await new ExplorerApi(req).call("nearcore-status");
   } catch (error) {
     res.status(502).send(error);
     return;

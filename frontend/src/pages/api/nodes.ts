@@ -1,6 +1,5 @@
 import { NextApiHandler } from "next";
-import { getNearNetwork } from "../../libraries/config";
-import wampApi from "../../libraries/wamp/api";
+import { ExplorerApi } from "../../libraries/explorer-wamp";
 
 const handler: NextApiHandler = async (req, res) => {
   try {
@@ -11,10 +10,8 @@ const handler: NextApiHandler = async (req, res) => {
 
     res.send({});
 
-    const nearNetwork = getNearNetwork(req);
-
-    wampApi
-      .getCall(nearNetwork)("node-telemetry", [
+    new ExplorerApi(req)
+      .call("node-telemetry", [
         {
           ...req.body,
           ip_address: ip_address,

@@ -2,41 +2,24 @@ import InfiniteScroll from "react-infinite-scroll-component";
 
 import { FC, useCallback, useEffect, useState } from "react";
 
+import { DatabaseConsumer } from "../../context/DatabaseProvider";
+
 import PaginationSpinner from "./PaginationSpinner";
 import Update from "./Update";
 
 import { useTranslation } from "react-i18next";
-import { useLatestBlockHeight } from "../../hooks/data";
-import { WampCall } from "../../libraries/wamp/api";
-import { useWampCall } from "../../hooks/wamp";
 
 interface StaticConfig<T, I> {
   Component: FC<{ items: T[] }>;
   category: string;
   paginationIndexer: (items: T[]) => I;
-  hasUpdateButton?: boolean;
 }
 
 interface Props<T, I> {
   count: number;
-  fetchDataFn: (wampCall: WampCall, count: number, indexer?: I) => Promise<T[]>;
+  detailPage?: boolean;
+  fetchDataFn: (count: number, indexer?: I) => Promise<T[]>;
 }
-
-type UpdateBlockHeightProps = {
-  onClick: () => void;
-};
-
-const UpdateBlockHeight: FC<UpdateBlockHeightProps> = (props) => {
-  const { t } = useTranslation();
-  const latestBlockHeight = useLatestBlockHeight();
-  return (
-    <div onClick={props.onClick}>
-      <Update>{`${t(
-        "utils.ListHandler.last_block"
-      )}#${latestBlockHeight}.`}</Update>
-    </div>
-  );
-};
 
 const Wrapper = <T, I>(config: StaticConfig<T, I>): FC<Props<T, I>> => {
   return (props) => {
@@ -45,12 +28,10 @@ const Wrapper = <T, I>(config: StaticConfig<T, I>): FC<Props<T, I>> => {
     const [shouldShow, setShouldShow] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
-    const wampCall = useWampCall();
 
     const fetch = useCallback(() => {
-      setLoading(true);
       props
-        .fetchDataFn(wampCall, props.count)
+        .fetchDataFn(props.count)
         .then((items) => {
           setItems(items);
           setHasMore(items.length >= props.count);
@@ -61,7 +42,6 @@ const Wrapper = <T, I>(config: StaticConfig<T, I>): FC<Props<T, I>> => {
           setShouldShow(true);
         });
     }, [
-      wampCall,
       props.fetchDataFn,
       setItems,
       setHasMore,
@@ -73,7 +53,7 @@ const Wrapper = <T, I>(config: StaticConfig<T, I>): FC<Props<T, I>> => {
     const fetchMore = useCallback(() => {
       setLoading(true);
       props
-        .fetchDataFn(wampCall, props.count, config.paginationIndexer(items))
+        .fetchDataFn(props.count, config.paginationIndexer(items))
         .then((nextItems) => {
           setItems(items.concat(nextItems));
           setHasMore(nextItems.length >= props.count);
@@ -81,7 +61,6 @@ const Wrapper = <T, I>(config: StaticConfig<T, I>): FC<Props<T, I>> => {
         .catch((err: Error) => console.error(err))
         .then(() => setLoading(false));
     }, [
-      wampCall,
       props.fetchDataFn,
       setItems,
       setHasMore,
@@ -91,15 +70,29 @@ const Wrapper = <T, I>(config: StaticConfig<T, I>): FC<Props<T, I>> => {
     ]);
 
     useEffect(() => {
-      fetch();
-    }, []);
+      if (props.count > 0) {
+        fetch();
+      }
+    }, [props.count]);
 
     if (!shouldShow) {
       return <PaginationSpinner hidden={false} />;
     }
     return (
       <>
-        {config.hasUpdateButton ? <UpdateBlockHeight onClick={fetch} /> : null}
+        {!props.detailPage ? (
+          <DatabaseConsumer>
+            {(context) => (
+              <div onClick={fetch}>
+                {config.category === "Block" ? (
+                  <Update>{`${t("utils.ListHandler.last_block")}#${
+                    context.latestBlockHeight
+                  }.`}</Update>
+                ) : null}
+              </div>
+            )}
+          </DatabaseConsumer>
+        ) : null}
         <InfiniteScroll
           dataLength={items.length}
           next={fetchMore}

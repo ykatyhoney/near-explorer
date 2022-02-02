@@ -1,21 +1,15 @@
 import { FC } from "react";
 
+import AccountsApi, * as A from "../../libraries/explorer-wamp/accounts";
+
 import ListHandler from "../utils/ListHandler";
 import FlipMove from "../utils/FlipMove";
 import AccountRow from "./AccountRow";
-import {
-  AccountPagination,
-  PaginatedAccountBasicInfo,
-} from "../../libraries/wamp/types";
-import { WampCall } from "../../libraries/wamp/api";
 
 const ACCOUNTS_PER_PAGE = 15;
 
-const fetchDataFn = (
-  wampCall: WampCall,
-  count: number,
-  paginationIndexer?: AccountPagination
-) => wampCall("accounts-list", [count, paginationIndexer]);
+const fetchDataFn = (count: number, paginationIndexer?: A.AccountPagination) =>
+  new AccountsApi().getAccounts(count, paginationIndexer);
 
 const AccountsWrapper: FC = () => (
   <AccountsList count={ACCOUNTS_PER_PAGE} fetchDataFn={fetchDataFn} />
@@ -24,16 +18,17 @@ const AccountsWrapper: FC = () => (
 export default AccountsWrapper;
 
 interface InnerProps {
-  items: PaginatedAccountBasicInfo[];
+  items: A.PaginatedAccountBasicInfo[];
 }
 
 const Accounts: FC<InnerProps> = ({ items }) => (
   <FlipMove duration={1000} staggerDurationBy={0}>
-    {items.map((account) => (
-      <div key={account.accountId}>
-        <AccountRow accountId={account.accountId} />
-      </div>
-    ))}
+    {items &&
+      items.map((account) => (
+        <div key={account.accountId}>
+          <AccountRow accountId={account.accountId} />
+        </div>
+      ))}
   </FlipMove>
 );
 

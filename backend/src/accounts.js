@@ -45,16 +45,14 @@ async function getAccountInfo(accountId) {
   }
   return {
     accountId: accountInfo.account_id,
-    createdByTransactionHash:
-      accountInfo.created_by_transaction_hash || undefined,
+    createdByTransactionHash: accountInfo.created_by_transaction_hash || null,
     createdAtBlockTimestamp: accountInfo.created_at_block_timestamp
       ? parseInt(accountInfo.created_at_block_timestamp)
-      : undefined,
-    deletedByTransactionHash:
-      accountInfo.deleted_by_transaction_hash || undefined,
+      : null,
+    deletedByTransactionHash: accountInfo.deleted_by_transaction_hash || null,
     deletedAtBlockTimestamp: accountInfo.deleted_at_block_timestamp
       ? parseInt(accountInfo.deleted_at_block_timestamp)
-      : undefined,
+      : null,
   };
 }
 

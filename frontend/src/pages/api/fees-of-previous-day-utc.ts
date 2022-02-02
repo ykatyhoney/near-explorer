@@ -1,14 +1,10 @@
 import moment from "moment";
 import { NextApiHandler } from "next";
-import { getNearNetwork } from "../../libraries/config";
-import wampApi from "../../libraries/wamp/api";
+import StatsApi from "../../libraries/explorer-wamp/stats";
 
 const handler: NextApiHandler = async (req, res) => {
   try {
-    const nearNetwork = getNearNetwork(req);
-    const feeCountPerDay = await wampApi.getCall(
-      nearNetwork
-    )("nearcore-total-fee-count", [1]);
+    const feeCountPerDay = await new StatsApi(req).getTotalFee(1);
     const resp = {
       date: moment(feeCountPerDay?.date).format("YYYY-MM-DD"),
       collected_fee_in_yoctonear: feeCountPerDay?.fee,

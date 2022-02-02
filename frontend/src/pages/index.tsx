@@ -2,6 +2,8 @@ import Head from "next/head";
 
 import { Container, Row, Col } from "react-bootstrap";
 
+import NetworkStatsProvider from "../context/NetworkStatsProvider";
+
 import Search from "../components/utils/Search";
 import DashboardNode from "../components/dashboard/DashboardNode";
 import DashboardBlock from "../components/dashboard/DashboardBlock";
@@ -43,7 +45,9 @@ const Dashboard = () => {
           <Col xs="12">
             <Row className="card-area" noGutters>
               <Col xs="12" md="6" className="mt-4">
-                <DashboardNode />
+                <NetworkStatsProvider>
+                  <DashboardNode />
+                </NetworkStatsProvider>
               </Col>
               <Col xs="12" md="6" className="mt-4">
                 <DashboardBlock className="ml-md-4" />

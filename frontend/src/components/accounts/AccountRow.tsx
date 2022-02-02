@@ -1,15 +1,15 @@
 import BN from "bn.js";
 import moment from "moment";
 
-import { FC, useCallback } from "react";
+import { FC, useEffect, useState } from "react";
 import { Row, Col } from "react-bootstrap";
+
+import AccountsApi from "../../libraries/explorer-wamp/accounts";
 
 import Balance from "../utils/Balance";
 import Link from "../utils/Link";
 
 import { useTranslation } from "react-i18next";
-import { useWampQuery } from "../../hooks/wamp";
-import { Account, getAccount } from "../../providers/accounts";
 
 export interface Props {
   accountId: string;
@@ -17,16 +17,34 @@ export interface Props {
 
 export interface State {
   nonStakedBalance?: BN;
-  deletedAtBlockTimestamp?: number;
-  createdAtBlockTimestamp?: number;
+  deletedAtBlockTimestamp?: number | null;
+  createdAtBlockTimestamp?: number | null;
 }
 
 const AccountRow: FC<Props> = ({ accountId }) => {
   const { t } = useTranslation();
-  const accountInfo = useWampQuery<Account>(
-    useCallback((wampCall) => getAccount(wampCall, accountId), [accountId])
-  );
-
+  const [
+    { nonStakedBalance, deletedAtBlockTimestamp, createdAtBlockTimestamp },
+    setState,
+  ] = useState<State>({});
+  useEffect(() => {
+    new AccountsApi()
+      .getAccountInfo(accountId)
+      .then((accountInfo) => {
+        setState({
+          nonStakedBalance: new BN(accountInfo.nonStakedBalance),
+          deletedAtBlockTimestamp: accountInfo.deletedAtBlockTimestamp,
+          createdAtBlockTimestamp: accountInfo.createdAtBlockTimestamp,
+        });
+      })
+      .catch((error) => {
+        console.warn(
+          "Account information retrieval failed for ",
+          accountId,
+          error
+        );
+      });
+  }, [accountId]);
   return (
     <Link href="/accounts/[id]" as={`/accounts/${accountId}`}>
       <a style={{ textDecoration: "none" }}>
@@ -34,7 +52,7 @@ const AccountRow: FC<Props> = ({ accountId }) => {
           <Col md="auto" xs="1" className="pr-0">
             <img
               src={
-                accountInfo?.deletedAtBlockTimestamp
+                deletedAtBlockTimestamp
                   ? "/static/images/icon-t-acct-delete.svg"
                   : "/static/images/icon-t-acct.svg"
               }
@@ -49,21 +67,19 @@ const AccountRow: FC<Props> = ({ accountId }) => {
             xs="5"
             className="ml-auto pt-1 text-right transaction-row-txid"
           >
-            {accountInfo ? (
-              accountInfo.deletedAtBlockTimestamp ? (
+            {deletedAtBlockTimestamp ? (
+              <div className="transaction-row-timer">
+                {t("component.accounts.AccountRow.deleted_on")}{" "}
+                {moment(deletedAtBlockTimestamp).format("LL")}
+              </div>
+            ) : typeof nonStakedBalance !== "undefined" ? (
+              <>
+                <Balance amount={nonStakedBalance} />
                 <div className="transaction-row-timer">
-                  {t("component.accounts.AccountRow.deleted_on")}{" "}
-                  {moment(accountInfo.deletedAtBlockTimestamp).format("LL")}
+                  {t("component.accounts.AccountRow.created_on")}{" "}
+                  {moment(createdAtBlockTimestamp).format("LL")}
                 </div>
-              ) : (
-                <>
-                  <Balance amount={accountInfo.nonStakedBalance} />
-                  <div className="transaction-row-timer">
-                    {t("component.accounts.AccountRow.created_on")}{" "}
-                    {moment(accountInfo.createdAtBlockTimestamp).format("LL")}
-                  </div>
-                </>
-              )
+              </>
             ) : null}
           </Col>
           <style jsx global>{`

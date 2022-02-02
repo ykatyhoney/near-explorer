@@ -1,37 +1,54 @@
+import BN from "bn.js";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ReactEcharts from "echarts-for-react";
 import * as echarts from "echarts";
-import { useMemo } from "react";
-import BN from "bn.js";
 import { utils } from "near-api-js";
 
+import StatsApi from "../../libraries/explorer-wamp/stats";
 import { Props } from "./TransactionsByDate";
-import { useWampSimpleQuery } from "../../hooks/wamp";
 
 const CirculatingSupplyStats = ({ chartStyle }: Props) => {
   const { t } = useTranslation();
-  const circulatingSupply =
-    useWampSimpleQuery("circulating-supply-stats", []) ?? [];
-  const circulatingTokenSupply = useMemo(
-    () =>
-      circulatingSupply.map(({ circulatingTokensSupply }) =>
-        new BN(circulatingTokensSupply)
-          .div(utils.format.NEAR_NOMINATION)
-          .toNumber()
-      ),
-    [circulatingSupply]
+  const [circulatingSupplyByDate, setCirculatingSupplyByDate] = useState(
+    Array()
   );
-  const totalTokenSupply = useMemo(
-    () =>
-      circulatingSupply.map(({ totalTokensSupply }) =>
-        new BN(totalTokensSupply).div(utils.format.NEAR_NOMINATION).toNumber()
-      ),
-    [circulatingSupply]
-  );
-  const supplyDates = useMemo(
-    () => circulatingSupply.map(({ date }) => date.slice(0, 10)),
-    [circulatingSupply]
-  );
+  const [date, setDate] = useState(Array());
+  const [totalTokensSupply, setTotalTokensSupplyByDate] = useState(Array());
+
+  useEffect(() => {
+    new StatsApi()
+      .getCirculaitngSupplyStats()
+      .then((data) => {
+        const parseData = data.map(
+          ({ date, circulatingTokensSupply, totalTokensSupply }) => ({
+            date,
+            circulatingTokensSupply: new BN(circulatingTokensSupply)
+              .div(utils.format.NEAR_NOMINATION)
+              .toNumber(),
+            totalTokensSupply: new BN(totalTokensSupply)
+              .div(utils.format.NEAR_NOMINATION)
+              .toNumber(),
+          })
+        );
+
+        const date = parseData.map(({ date }) =>
+          date.slice(0, 10)
+        ) as Array<string>;
+        const circulatingSupplyArray = parseData.map(
+          ({ circulatingTokensSupply }) => circulatingTokensSupply
+        ) as Array<number>;
+
+        const totalTokensSupplyArray = parseData.map(
+          ({ totalTokensSupply }) => totalTokensSupply
+        ) as Array<number>;
+        setDate(date);
+        setCirculatingSupplyByDate(circulatingSupplyArray);
+
+        setTotalTokensSupplyByDate(totalTokensSupplyArray);
+      })
+      .catch((error) => console.error(error));
+  }, []);
 
   const getOption = (seriesNameArray: Array<string>) => {
     return {
@@ -57,7 +74,7 @@ const CirculatingSupplyStats = ({ chartStyle }: Props) => {
         {
           type: "category",
           boundaryGap: false,
-          data: supplyDates,
+          data: date,
         },
       ],
       yAxis: [
@@ -113,7 +130,7 @@ const CirculatingSupplyStats = ({ chartStyle }: Props) => {
               color: "#25272A",
             },
           },
-          data: totalTokenSupply,
+          data: totalTokensSupply,
         },
         {
           name: seriesNameArray[1],
@@ -144,7 +161,7 @@ const CirculatingSupplyStats = ({ chartStyle }: Props) => {
               color: "#25272A",
             },
           },
-          data: circulatingTokenSupply,
+          data: circulatingSupplyByDate,
         },
       ],
     };

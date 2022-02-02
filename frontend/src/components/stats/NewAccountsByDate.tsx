@@ -1,42 +1,50 @@
-import React, { useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, Tab } from "react-bootstrap";
 import ReactEcharts from "echarts-for-react";
 import * as echarts from "echarts";
 
+import StatsApi, { AccountsByDate } from "../../libraries/explorer-wamp/stats";
 import { cumulativeSumArray } from "../../libraries/stats";
 
 import { Props } from "./TransactionsByDate";
 
 import { useTranslation } from "react-i18next";
-import { useWampSimpleQuery } from "../../hooks/wamp";
 
 const NewAccountsByDate = ({ chartStyle }: Props) => {
   const { t } = useTranslation();
-  const liveAccounts =
-    useWampSimpleQuery("live-accounts-count-aggregated-by-date", []) ?? [];
-  const newAccounts =
-    useWampSimpleQuery("new-accounts-count-aggregated-by-date", []) ?? [];
+  const [newAccountsByDate, setAccounts] = useState(Array());
+  const [date, setDate] = useState(Array());
+  const [cumulativeNewAccountsByDate, setTotal] = useState(Array());
+  const [liveAccountsByDate, setLive] = useState(Array());
+  const [liveDate, setLiveDate] = useState(Array());
 
-  const newAccountsCount = useMemo(
-    () => newAccounts.map(({ accountsCount }) => Number(accountsCount)),
-    [newAccounts]
-  );
-  const newAccountsDate = useMemo(
-    () => newAccounts.map(({ date }) => date.slice(0, 10)),
-    [newAccounts]
-  );
-  const cumulativeNewAccountsByDate = useMemo(
-    () => cumulativeSumArray(newAccountsCount),
-    [newAccountsCount]
-  );
-  const liveAccountsCount = useMemo(
-    () => liveAccounts.map(({ accountsCount }) => Number(accountsCount)),
-    [liveAccounts]
-  );
-  const liveAccountsDate = useMemo(
-    () => liveAccounts.map(({ date }) => date.slice(0, 10)),
-    [liveAccounts]
-  );
+  useEffect(() => {
+    new StatsApi().newAccountsCountAggregatedByDate().then((accounts) => {
+      if (accounts) {
+        const newAccounts = accounts.map((account: AccountsByDate) =>
+          Number(account.accountsCount)
+        );
+        const date = accounts.map((account: AccountsByDate) =>
+          account.date.slice(0, 10)
+        );
+        setAccounts(newAccounts);
+        setTotal(cumulativeSumArray(newAccounts));
+        setDate(date);
+      }
+    });
+    new StatsApi().liveAccountsCountAggregatedByDate().then((accounts) => {
+      if (accounts) {
+        const liveAccounts = accounts.map((account: AccountsByDate) =>
+          Number(account.accountsCount)
+        );
+        const date = accounts.map((account: AccountsByDate) =>
+          account.date.slice(0, 10)
+        );
+        setLive(liveAccounts);
+        setLiveDate(date);
+      }
+    });
+  }, []);
 
   const getOption = (
     title: string,
@@ -126,8 +134,8 @@ const NewAccountsByDate = ({ chartStyle }: Props) => {
           option={getOption(
             t("component.stats.NewAccountsByDate.daily_number_of_new_accounts"),
             t("component.stats.NewAccountsByDate.new_accounts"),
-            newAccountsCount,
-            newAccountsDate
+            newAccountsByDate,
+            date
           )}
           style={chartStyle}
         />
@@ -139,8 +147,8 @@ const NewAccountsByDate = ({ chartStyle }: Props) => {
               "component.stats.NewAccountsByDate.daily_number_of_live_accounts"
             ),
             t("component.stats.NewAccountsByDate.new_accounts"),
-            liveAccountsCount,
-            liveAccountsDate
+            liveAccountsByDate,
+            liveDate
           )}
           style={chartStyle}
         />
@@ -151,7 +159,7 @@ const NewAccountsByDate = ({ chartStyle }: Props) => {
             t("component.stats.NewAccountsByDate.total_number_of_new_accounts"),
             t("component.stats.NewAccountsByDate.new_accounts"),
             cumulativeNewAccountsByDate,
-            newAccountsDate
+            date
           )}
           style={chartStyle}
         />

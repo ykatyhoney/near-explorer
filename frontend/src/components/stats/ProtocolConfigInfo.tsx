@@ -1,61 +1,82 @@
 import moment from "moment";
 import BN from "bn.js";
-import React, { useCallback, useMemo } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { utils } from "near-api-js";
+
+import StatsApi from "../../libraries/explorer-wamp/stats";
+import { NetworkStatsContext } from "../../context/NetworkStatsProvider";
 
 import { InfoCard, InfoCardCell as Cell } from "../utils/InfoCard";
 import Balance, { formatWithCommas } from "../utils/Balance";
 import NearBadge from "../nodes/NearBadge";
 
 import { useTranslation } from "react-i18next";
-import { useNetworkStats } from "../../hooks/subscriptions";
-import { useEpochStartBlock } from "../../hooks/data";
-import { useWampQuery, useWampSimpleQuery } from "../../hooks/wamp";
 
 const ProtocolConfigInfo = () => {
   const { t } = useTranslation();
-  const networkStats = useNetworkStats();
-  const epochStartBlock = useEpochStartBlock();
+  const [totalGenesisSupply, setTotalGenesisSupply] = useState<BN>();
+  const [
+    genesisProtocolVersion,
+    setGenesisProtocolVersion,
+  ] = useState<number>();
+  const [liveAccountsCount, setLiveAccountsCount] = useState<number>();
+  const [genesisAccountsAmount, setGenesisAccountsAmount] = useState<number>();
+  const [
+    firstProducedBlockTimestamp,
+    setFirstProducedBlockTimestamp,
+  ] = useState<string>();
 
-  const genesisAccountsAmount = useWampSimpleQuery(
-    "nearcore-genesis-accounts-count",
-    []
-  );
-  const genesisHeight = networkStats?.genesisHeight;
-  const genesisProtocolConfig = useWampQuery(
-    useCallback(
-      async (wampCall) =>
-        genesisHeight
-          ? wampCall("nearcore-genesis-protocol-configuration", [genesisHeight])
-          : undefined,
-      [genesisHeight]
-    )
-  );
-  const firstProducedBlockTimestamp = useWampSimpleQuery(
-    "first-produced-block-timestamp",
-    []
-  );
+  const { networkStats, epochStartBlock } = useContext(NetworkStatsContext);
 
-  const liveAccountsCount =
-    useWampSimpleQuery("live-accounts-count-aggregated-by-date", []) ?? [];
-  const lastDateLiveAccounts = useMemo(
-    () => liveAccountsCount[liveAccountsCount.length - 1]?.accountsCount,
-    [liveAccountsCount]
-  );
-
-  let epochTotalSupply = epochStartBlock
+  let epochTotalSupply = epochStartBlock?.totalSupply
     ? new BN(epochStartBlock.totalSupply.toString())
         .div(utils.format.NEAR_NOMINATION)
         .toNumber() /
       10 ** 6
     : null;
 
-  const genesisTotalSupply = genesisProtocolConfig
-    ? new BN(genesisProtocolConfig.header.total_supply)
+  const genesisTotaSupply = totalGenesisSupply
+    ? new BN(totalGenesisSupply.toString())
         .div(utils.format.NEAR_NOMINATION)
         .toNumber() /
       10 ** 6
     : null;
+
+  useEffect(() => {
+    if (networkStats?.genesisHeight) {
+      new StatsApi()
+        .networkGenesisProtocolConfig(networkStats.genesisHeight)
+        .then((genesisBlockInfo: any) => {
+          if (genesisBlockInfo) {
+            setTotalGenesisSupply(genesisBlockInfo.header.total_supply);
+            setGenesisProtocolVersion(
+              genesisBlockInfo.header.latest_protocol_version
+            );
+          }
+        });
+    }
+  }, [networkStats?.genesisHeight]);
+
+  useEffect(() => {
+    new StatsApi().liveAccountsCountAggregatedByDate().then((accounts) => {
+      if (accounts?.length > 0) {
+        const { accountsCount } = accounts[accounts.length - 1];
+        setLiveAccountsCount(accountsCount);
+      }
+    });
+
+    new StatsApi().genesisAccountsCount().then((count) => {
+      if (count) {
+        setGenesisAccountsAmount(count);
+      }
+    });
+
+    new StatsApi().firstProducedBlockTimestamp().then((blockTimestamp) => {
+      if (blockTimestamp) {
+        setFirstProducedBlockTimestamp(blockTimestamp);
+      }
+    });
+  }, []);
 
   return (
     <>
@@ -79,12 +100,10 @@ const ProtocolConfigInfo = () => {
           )}
           cellOptions={{ xs: "12", sm: "6", md: "6", xl: "4" }}
         >
-          {genesisProtocolConfig && networkStats && (
+          {genesisProtocolVersion && networkStats?.epochProtocolVersion && (
             <>
-              <span className="genesis-text">
-                v{genesisProtocolConfig.header.latest_protocol_version}
-              </span>{" "}
-              / <span>v{networkStats.epochProtocolVersion}</span>
+              <span className="genesis-text">v{genesisProtocolVersion}</span> /{" "}
+              <span>v{networkStats.epochProtocolVersion}</span>
             </>
           )}
         </Cell>
@@ -110,12 +129,12 @@ const ProtocolConfigInfo = () => {
           title={t("component.stats.ProtocolConfigInfo.genesis_total_supply")}
           cellOptions={{ xs: "12", sm: "6", md: "6", xl: "3" }}
         >
-          {genesisTotalSupply && genesisProtocolConfig && (
+          {genesisTotaSupply && totalGenesisSupply && (
             <span className="genesis-text">
               <Balance
-                amount={new BN(genesisProtocolConfig.header.total_supply)}
+                amount={totalGenesisSupply}
                 formulatedAmount={formatWithCommas(
-                  genesisTotalSupply.toFixed(1)
+                  genesisTotaSupply.toFixed(1)
                 )}
                 suffix={<span className="balance-suffix">M</span>}
                 label={<NearBadge />}
@@ -151,7 +170,7 @@ const ProtocolConfigInfo = () => {
           title={t("component.stats.ProtocolConfigInfo.live_accounts")}
           cellOptions={{ xs: "12", sm: "6", md: "6", xl: "2" }}
         >
-          {lastDateLiveAccounts}
+          {liveAccountsCount}
         </Cell>
       </InfoCard>
       <style global jsx>{`

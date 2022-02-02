@@ -1,24 +1,32 @@
-import React, { useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import ReactEcharts from "echarts-for-react";
 import * as echarts from "echarts";
+
+import StatsApi, { ContractsByDate } from "../../libraries/explorer-wamp/stats";
 
 import { Props } from "./TransactionsByDate";
 
 import { useTranslation } from "react-i18next";
-import { useWampSimpleQuery } from "../../hooks/wamp";
 
 const ActiveContractsByDate = ({ chartStyle }: Props) => {
   const { t } = useTranslation();
-  const contractsByDate =
-    useWampSimpleQuery("active-contracts-count-aggregated-by-date", []) ?? [];
-  const contractsByDateCount = useMemo(
-    () => contractsByDate.map(({ contractsCount }) => contractsCount),
-    [contractsByDate]
-  );
-  const contractsByDateDates = useMemo(
-    () => contractsByDate.map(({ date }) => date.slice(0, 10)),
-    [contractsByDate]
-  );
+  const [newContractsByDate, setContracts] = useState(Array());
+  const [date, setDate] = useState(Array());
+
+  useEffect(() => {
+    new StatsApi().activeContractsCountAggregatedByDate().then((contracts) => {
+      if (contracts) {
+        const newContracts = contracts.map(
+          (contract: ContractsByDate) => contract.contractsCount
+        );
+        setContracts(newContracts);
+        const date = contracts.map((contract: ContractsByDate) =>
+          contract.date.slice(0, 10)
+        );
+        setDate(date);
+      }
+    });
+  }, []);
 
   const getOption = (
     title: string,
@@ -45,7 +53,7 @@ const ActiveContractsByDate = ({ chartStyle }: Props) => {
         {
           type: "category",
           boundaryGap: false,
-          data: contractsByDateDates,
+          data: date,
         },
       ],
       yAxis: [
@@ -107,7 +115,7 @@ const ActiveContractsByDate = ({ chartStyle }: Props) => {
           "component.stats.ActiveContractsByDate.daily_number_of_active_contracts"
         ),
         t("component.stats.ActiveContractsByDate.active_contracts"),
-        contractsByDateCount
+        newContractsByDate
       )}
       style={chartStyle}
     />

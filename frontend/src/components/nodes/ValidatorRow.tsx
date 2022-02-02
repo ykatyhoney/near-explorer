@@ -5,10 +5,11 @@ import { useTranslation } from "react-i18next";
 
 import ValidatorMainRow from "./ValidatorMainRow";
 import ValidatorCollapsedRow from "./ValidatorCollapsedRow";
-import { ValidationNodeInfo } from "../../libraries/wamp/types";
+
+import * as N from "../../libraries/explorer-wamp/nodes";
 
 interface Props {
-  node: ValidationNodeInfo;
+  node: N.ValidationNodeInfo;
   index: number;
   totalStake?: BN;
 }
@@ -42,18 +43,17 @@ const ValidatorRow: FC<Props> = ({ node, index, totalStake }) => {
       100;
   }
 
-  const cumulativeStakeAmount =
-    node.cumulativeStakeAmount && new BN(node.cumulativeStakeAmount);
-  if (node.currentStake && totalStake && cumulativeStakeAmount) {
+  if (node.currentStake && totalStake && node.cumulativeStakeAmount) {
     cumulativeStake =
-      cumulativeStakeAmount.mul(new BN(10000)).div(totalStake).toNumber() / 100;
+      node.cumulativeStakeAmount.mul(new BN(10000)).div(totalStake).toNumber() /
+      100;
   }
 
   if (
     networkHolder.size === 0 &&
     totalStake &&
-    cumulativeStakeAmount &&
-    cumulativeStakeAmount.gt(totalStake.divn(3))
+    node.cumulativeStakeAmount &&
+    node.cumulativeStakeAmount.gt(totalStake.divn(3))
   ) {
     networkHolder.add(index);
   }
@@ -93,7 +93,7 @@ const ValidatorRow: FC<Props> = ({ node, index, totalStake }) => {
         poolDescription={node.poolDetails?.description}
       />
 
-      {cumulativeStakeAmount && networkHolder.has(index) && (
+      {node.cumulativeStakeAmount && networkHolder.has(index) && (
         <tr className="cumulative-stake-holders-row">
           <td colSpan={8} className="warning-text text-center">
             {t("component.nodes.ValidatorRow.warning_tip", {

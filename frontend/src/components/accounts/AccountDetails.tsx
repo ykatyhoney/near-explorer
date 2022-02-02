@@ -1,8 +1,10 @@
 import moment from "moment";
 
-import { FC } from "react";
+import { FC, useEffect, useState } from "react";
 
 import { Row, Col, Spinner } from "react-bootstrap";
+
+import AccountsApi, { Account } from "../../libraries/explorer-wamp/accounts";
 
 import CardCell from "../utils/CardCell";
 import Term from "../utils/Term";
@@ -14,8 +16,6 @@ import StorageSize from "../utils/StorageSize";
 
 import { Trans, useTranslation } from "react-i18next";
 import { useNetworkContext } from "../../hooks/use-network-context";
-import { useWampSimpleQuery } from "../../hooks/wamp";
-import { Account } from "../../providers/accounts";
 import { styled } from "../../libraries/stitches.config";
 
 const AccountInfoContainer = styled("div", {
@@ -36,17 +36,34 @@ const TransactionLinkIcon = styled("img", {
 });
 
 export interface Props {
-  account: Partial<Omit<Account, "accountId">> & {
-    accountId: string;
-  };
+  account: Partial<Omit<Account, "accountId">> & { accountId: string };
 }
 
 const AccountDetails: FC<Props> = ({ account }) => {
   const { t } = useTranslation();
   const { currentNetwork } = useNetworkContext();
-  const transactionCount = useWampSimpleQuery("account-transactions-count", [
-    account.accountId,
-  ]);
+  const [outTransactionsCount, setOutTransactionsCount] = useState<number>();
+  const [inTransactionsCount, setInTransactionsCount] = useState<number>();
+  useEffect(() => {
+    setOutTransactionsCount(undefined);
+    setInTransactionsCount(undefined);
+    new AccountsApi()
+      .getAccountTransactionsCount(account.accountId)
+      .then((accountStats) => {
+        if (accountStats) {
+          setOutTransactionsCount(accountStats.outTransactionsCount);
+          setInTransactionsCount(accountStats.inTransactionsCount);
+        }
+        return;
+      })
+      .catch((error) => {
+        console.warn(
+          "Account information retrieval failed for ",
+          account.accountId,
+          error
+        );
+      });
+  }, [account.accountId]);
 
   return (
     <AccountInfoContainer>
@@ -70,8 +87,8 @@ const AccountDetails: FC<Props> = ({ account }) => {
               <>
                 <span>
                   &uarr;
-                  {transactionCount !== undefined ? (
-                    transactionCount.outTransactionsCount.toLocaleString()
+                  {outTransactionsCount !== undefined ? (
+                    outTransactionsCount.toLocaleString()
                   ) : (
                     <Spinner animation="border" variant="secondary" />
                   )}
@@ -79,8 +96,8 @@ const AccountDetails: FC<Props> = ({ account }) => {
                 &nbsp;&nbsp;
                 <span>
                   &darr;
-                  {transactionCount !== undefined ? (
-                    transactionCount.outTransactionsCount.toLocaleString()
+                  {inTransactionsCount !== undefined ? (
+                    inTransactionsCount.toLocaleString()
                   ) : (
                     <Spinner animation="border" variant="secondary" />
                   )}
@@ -207,7 +224,8 @@ const AccountDetails: FC<Props> = ({ account }) => {
             </Col>
           </Row>
         )}
-      {!account.deletedAtBlockTimestamp ? (
+      {account.deletedAtBlockTimestamp === null ||
+      typeof account.deletedAtBlockTimestamp === "undefined" ? (
         <Row noGutters className="border-0">
           <Col md="4">
             <CardCell
@@ -221,7 +239,7 @@ const AccountDetails: FC<Props> = ({ account }) => {
                 />
               }
               text={
-                !account.createdByTransactionHash ||
+                account.createdByTransactionHash === null ||
                 account.createdByTransactionHash === "Genesis" ? (
                   "Genesis"
                 ) : account.createdAtBlockTimestamp ? (
@@ -237,7 +255,7 @@ const AccountDetails: FC<Props> = ({ account }) => {
               className="account-card-back border-0"
             />
           </Col>
-          {!account.createdByTransactionHash ||
+          {account.createdByTransactionHash === null ||
           account.createdByTransactionHash === "Genesis" ? null : (
             <Col md="8">
               <CardCell
@@ -256,7 +274,7 @@ const AccountDetails: FC<Props> = ({ account }) => {
                   <>
                     {account.createdByTransactionHash}
                     <TransactionLink
-                      transactionHash={account.createdByTransactionHash}
+                      transactionHash={account.createdByTransactionHash!}
                     >
                       <TransactionLinkIcon
                         src={"/static/images/icon-m-copy.svg"}

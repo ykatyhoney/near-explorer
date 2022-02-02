@@ -1,12 +1,12 @@
 import { FC } from "react";
-import { Action, RpcAction } from "../../libraries/wamp/types";
 
 import actionIcons from "./ActionIcons";
 import ActionMessage from "./ActionMessage";
 import ActionRowBlock, { ViewMode, DetalizationMode } from "./ActionRowBlock";
+import * as T from "../../libraries/explorer-wamp/transactions";
 
 export interface Props {
-  action: Action<keyof RpcAction>;
+  action: T.Action;
   blockTimestamp?: number;
   className?: string;
   detailsLink?: React.ReactNode;

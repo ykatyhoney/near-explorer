@@ -1,13 +1,15 @@
 import "../libraries/wdyr";
 import NextApp from "next/app";
+import getConfig from "next/config";
 import Head from "next/head";
 import { useMemo } from "react";
 
-import { getConfig, getNearNetwork, NearNetwork } from "../libraries/config";
+import { getNearNetwork, NearNetwork } from "../libraries/config";
 
 import Header from "../components/utils/Header";
 import Footer from "../components/utils/Footer";
 import { NetworkContext } from "../context/NetworkContext";
+import DatabaseProvider from "../context/DatabaseProvider";
 
 import {
   getLanguage,
@@ -117,7 +119,9 @@ const App: AppType = ({
         <AppWrapper>
           <Header />
           <BackgroundImage src="/static/images/explorer-bg.svg" />
-          <Component {...pageProps} />
+          <DatabaseProvider>
+            <Component {...pageProps} />
+          </DatabaseProvider>
         </AppWrapper>
         <Footer />
       </NetworkContext.Provider>

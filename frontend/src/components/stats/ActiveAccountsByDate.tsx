@@ -1,37 +1,47 @@
-import React, { useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import ReactEcharts from "echarts-for-react";
 import * as echarts from "echarts";
 import { Tabs, Tab } from "react-bootstrap";
 
+import StatsApi, { AccountsByDate } from "../../libraries/explorer-wamp/stats";
+
 import { Props } from "./TransactionsByDate";
 
 import { useTranslation } from "react-i18next";
-import { useWampSimpleQuery } from "../../hooks/wamp";
 
 const ActiveAccountsByDate = ({ chartStyle }: Props) => {
   const { t } = useTranslation();
-  const accountsByWeekCount =
-    useWampSimpleQuery("active-accounts-count-aggregated-by-week", []) ?? [];
-  const accountsByDateCount =
-    useWampSimpleQuery("active-accounts-count-aggregated-by-date", []) ?? [];
+  const [activeAccountsByDate, setAccounts] = useState(Array());
+  const [date, setDate] = useState(Array());
+  const [activeAccountsByWeek, setWeekAccounts] = useState(Array());
+  const [week, setWeek] = useState(Array());
 
-  const accountsByWeek = useMemo(
-    () => accountsByWeekCount.map(({ accountsCount }) => Number(accountsCount)),
-    [accountsByWeekCount]
-  );
-  const accountsByWeekDate = useMemo(
-    () => accountsByWeekCount.map(({ date }) => date.slice(0, 10)),
-    [accountsByWeekCount]
-  );
-
-  const accountsByDate = useMemo(
-    () => accountsByDateCount.map(({ accountsCount }) => Number(accountsCount)),
-    [accountsByDateCount]
-  );
-  const accountsByDateDate = useMemo(
-    () => accountsByDateCount.map(({ date }) => date.slice(0, 10)),
-    [accountsByDateCount]
-  );
+  useEffect(() => {
+    new StatsApi().activeAccountsCountAggregatedByDate().then((accounts) => {
+      if (accounts) {
+        const newAccounts = accounts.map((account: AccountsByDate) =>
+          Number(account.accountsCount)
+        );
+        const date = accounts.map((account: AccountsByDate) =>
+          account.date.slice(0, 10)
+        );
+        setAccounts(newAccounts);
+        setDate(date);
+      }
+    });
+    new StatsApi().activeAccountsCountAggregatedByWeek().then((accounts) => {
+      if (accounts) {
+        const newAccounts = accounts.map((account: AccountsByDate) =>
+          Number(account.accountsCount)
+        );
+        const week = accounts.map((account: AccountsByDate) =>
+          account.date.slice(0, 10)
+        );
+        setWeekAccounts(newAccounts);
+        setWeek(week);
+      }
+    });
+  }, []);
 
   const getOption = (
     title: string,
@@ -123,8 +133,8 @@ const ActiveAccountsByDate = ({ chartStyle }: Props) => {
               "component.stats.ActiveAccountsByDate.daily_number_of_active_accounts"
             ),
             t("component.stats.ActiveAccountsByDate.active_accounts"),
-            accountsByDate,
-            accountsByDateDate
+            activeAccountsByDate,
+            date
           )}
           style={chartStyle}
         />
@@ -136,8 +146,8 @@ const ActiveAccountsByDate = ({ chartStyle }: Props) => {
               "component.stats.ActiveAccountsByDate.weekly_number_of_active_accounts"
             ),
             t("component.stats.ActiveAccountsByDate.active_accounts"),
-            accountsByWeek,
-            accountsByWeekDate
+            activeAccountsByWeek,
+            week
           )}
           style={chartStyle}
         />

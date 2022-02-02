@@ -1,4 +1,4 @@
-import { ExecutionStatus } from "../../libraries/wamp/types";
+import { ExecutionStatus } from "../../libraries/explorer-wamp/transactions";
 import { useTranslation } from "react-i18next";
 
 export interface Props {

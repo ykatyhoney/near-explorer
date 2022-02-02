@@ -4,17 +4,9 @@ import AccountLink from "../utils/AccountLink";
 import Balance from "../utils/Balance";
 import CodePreview from "../utils/CodePreview";
 
+import * as T from "../../libraries/explorer-wamp/transactions";
+
 import { TFunction, useTranslation } from "react-i18next";
-import {
-  AddKey,
-  CreateAccount,
-  DeleteAccount,
-  DeleteKey,
-  DeployContract,
-  FunctionCall,
-  Stake,
-  Transfer,
-} from "../../libraries/wamp/types";
 
 export interface Props<A> {
   actionKind: keyof TransactionMessageRenderers;
@@ -24,24 +16,24 @@ export interface Props<A> {
 }
 
 type AnyAction =
-  | CreateAccount
-  | DeleteAccount
-  | DeployContract
-  | FunctionCall
-  | Transfer
-  | Stake
-  | AddKey
-  | DeleteKey;
+  | T.CreateAccount
+  | T.DeleteAccount
+  | T.DeployContract
+  | T.FunctionCall
+  | T.Transfer
+  | T.Stake
+  | T.AddKey
+  | T.DeleteKey;
 
 interface TransactionMessageRenderers {
-  CreateAccount: React.FC<Props<CreateAccount>>;
-  DeleteAccount: React.FC<Props<DeleteAccount>>;
-  DeployContract: React.FC<Props<DeployContract>>;
-  FunctionCall: React.FC<Props<FunctionCall>>;
-  Transfer: React.FC<Props<Transfer>>;
-  Stake: React.FC<Props<Stake>>;
-  AddKey: React.FC<Props<AddKey>>;
-  DeleteKey: React.FC<Props<DeleteKey>>;
+  CreateAccount: React.FC<Props<T.CreateAccount>>;
+  DeleteAccount: React.FC<Props<T.DeleteAccount>>;
+  DeployContract: React.FC<Props<T.DeployContract>>;
+  FunctionCall: React.FC<Props<T.FunctionCall>>;
+  Transfer: React.FC<Props<T.Transfer>>;
+  Stake: React.FC<Props<T.Stake>>;
+  AddKey: React.FC<Props<T.AddKey>>;
+  DeleteKey: React.FC<Props<T.DeleteKey>>;
 }
 
 export const displayArgs = (args: string, t: TFunction<"common">) => {
@@ -67,7 +59,7 @@ export const displayArgs = (args: string, t: TFunction<"common">) => {
 };
 
 const transactionMessageRenderers: TransactionMessageRenderers = {
-  CreateAccount: ({ receiverId }: Props<CreateAccount>) => {
+  CreateAccount: ({ receiverId }: Props<T.CreateAccount>) => {
     const { t } = useTranslation();
     return (
       <>
@@ -78,7 +70,7 @@ const transactionMessageRenderers: TransactionMessageRenderers = {
       </>
     );
   },
-  DeleteAccount: ({ receiverId, actionArgs }: Props<DeleteAccount>) => {
+  DeleteAccount: ({ receiverId, actionArgs }: Props<T.DeleteAccount>) => {
     const { t } = useTranslation();
     return (
       <>
@@ -91,7 +83,7 @@ const transactionMessageRenderers: TransactionMessageRenderers = {
       </>
     );
   },
-  DeployContract: ({ receiverId }: Props<DeployContract>) => {
+  DeployContract: ({ receiverId }: Props<T.DeployContract>) => {
     const { t } = useTranslation();
     return (
       <>
@@ -106,7 +98,7 @@ const transactionMessageRenderers: TransactionMessageRenderers = {
     receiverId,
     actionArgs,
     showDetails,
-  }: Props<FunctionCall>) => {
+  }: Props<T.FunctionCall>) => {
     const { t } = useTranslation();
     let args;
     if (showDetails) {
@@ -141,7 +133,7 @@ const transactionMessageRenderers: TransactionMessageRenderers = {
       </>
     );
   },
-  Transfer: ({ receiverId, actionArgs: { deposit } }: Props<Transfer>) => {
+  Transfer: ({ receiverId, actionArgs: { deposit } }: Props<T.Transfer>) => {
     const { t } = useTranslation();
     return (
       <>
@@ -152,7 +144,7 @@ const transactionMessageRenderers: TransactionMessageRenderers = {
       </>
     );
   },
-  Stake: ({ actionArgs: { stake, public_key } }: Props<Stake>) => {
+  Stake: ({ actionArgs: { stake, public_key } }: Props<T.Stake>) => {
     const { t } = useTranslation();
     return (
       <>
@@ -164,7 +156,7 @@ const transactionMessageRenderers: TransactionMessageRenderers = {
       </>
     );
   },
-  AddKey: ({ receiverId, actionArgs }: Props<AddKey>) => {
+  AddKey: ({ receiverId, actionArgs }: Props<T.AddKey>) => {
     const { t } = useTranslation();
     return (
       <>
@@ -232,7 +224,7 @@ const transactionMessageRenderers: TransactionMessageRenderers = {
       </>
     );
   },
-  DeleteKey: ({ actionArgs: { public_key } }: Props<DeleteKey>) => {
+  DeleteKey: ({ actionArgs: { public_key } }: Props<T.DeleteKey>) => {
     const { t } = useTranslation();
     return (
       <>

@@ -1,7 +1,8 @@
 import BN from "bn.js";
-import { ValidationNodeInfo } from "../../../libraries/wamp/types";
 
-export const VALIDATORS_LIST: ValidationNodeInfo[] = [
+import * as N from "../../../libraries/explorer-wamp/nodes";
+
+export const VALIDATORS_LIST: N.ValidationNodeInfo[] = [
   {
     account_id: "staked.poolv1.near",
     is_slashed: false,
@@ -30,7 +31,7 @@ export const VALIDATORS_LIST: ValidationNodeInfo[] = [
       denominator: 100,
     },
     delegatorsCount: 874,
-    cumulativeStakeAmount: "42476926077593266003727024545752",
+    cumulativeStakeAmount: new BN("42476926077593266003727024545752"),
   },
   // 'active' without poolDetails
   {
@@ -61,7 +62,7 @@ export const VALIDATORS_LIST: ValidationNodeInfo[] = [
       denominator: 100,
     },
     delegatorsCount: 436,
-    cumulativeStakeAmount: "63291850295998744225597810232098",
+    cumulativeStakeAmount: new BN("63291850295998744225597810232098"),
   },
   // 'active' with all data
   {
@@ -100,7 +101,7 @@ export const VALIDATORS_LIST: ValidationNodeInfo[] = [
         "1% fee in perpetuity secured for NEAR community. Run by Silicon Valley engineers for service permanent availability. We drop rhymes, not blocks",
       country_code: "AQ",
     },
-    cumulativeStakeAmount: "99683626384055340095613466402170",
+    cumulativeStakeAmount: new BN("99683626384055340095613466402170"),
   },
   // joining
   {
@@ -250,14 +251,14 @@ export const VALIDATORS_LIST: ValidationNodeInfo[] = [
       twitter: "@01node",
       url: "https://01node.com/",
     },
-    cumulativeStakeAmount: "406947111873428286547337892954837",
+    cumulativeStakeAmount: new BN("406947111873428286547337892954837"),
   },
 ];
 
 export const VALIDATORS_TOTAL_STAKE = VALIDATORS_LIST.filter(
-  (i: ValidationNodeInfo) =>
+  (i: N.ValidationNodeInfo) =>
     i.stakingStatus && ["active", "leaving"].indexOf(i.stakingStatus) >= 0
 ).reduce(
-  (acc: BN, node: ValidationNodeInfo) => acc.add(new BN(node.currentStake)),
+  (acc: BN, node: N.ValidationNodeInfo) => acc.add(new BN(node.currentStake)),
   new BN(0)
 ) as BN;

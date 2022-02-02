@@ -1,5 +1,7 @@
 import { FC, useCallback } from "react";
 
+import TransactionsApi, * as T from "../../libraries/explorer-wamp/transactions";
+
 import FlipMove from "../utils/FlipMove";
 import ListHandler from "../utils/ListHandler";
 import Placeholder from "../utils/Placeholder";
@@ -7,11 +9,6 @@ import Placeholder from "../utils/Placeholder";
 import TransactionAction from "./TransactionAction";
 
 import { useTranslation } from "react-i18next";
-import { WampCall } from "../../libraries/wamp/api";
-import {
-  TransactionBaseInfo,
-  TransactionPagination,
-} from "../../libraries/wamp/types";
 
 export interface OuterProps {
   accountId?: string;
@@ -27,26 +24,22 @@ const TransactionsWrapper: FC<OuterProps> = ({
   count = TRANSACTIONS_PER_PAGE,
 }) => {
   const fetchDataFn = useCallback(
-    (
-      wampCall: WampCall,
-      count: number,
-      paginationIndexer?: TransactionPagination
-    ) => {
+    (count: number, paginationIndexer?: T.TxPagination) => {
       if (accountId) {
-        return wampCall("transactions-list-by-account-id", [
+        return new TransactionsApi().getAccountTransactionsList(
           accountId,
           count,
-          paginationIndexer,
-        ]);
+          paginationIndexer
+        );
       }
       if (blockHash) {
-        return wampCall("transactions-list-by-block-hash", [
+        return new TransactionsApi().getTransactionsListInBlock(
           blockHash,
           count,
-          paginationIndexer,
-        ]);
+          paginationIndexer
+        );
       }
-      return wampCall("transactions-list", [count, paginationIndexer]);
+      return new TransactionsApi().getTransactions(count, paginationIndexer);
     },
     [accountId, blockHash]
   );
@@ -55,12 +48,13 @@ const TransactionsWrapper: FC<OuterProps> = ({
       key={accountId || blockHash}
       count={count}
       fetchDataFn={fetchDataFn}
+      detailPage={accountId || blockHash ? true : false}
     />
   );
 };
 
 interface InnerProps {
-  items: TransactionBaseInfo[];
+  items: T.Transaction[];
 }
 
 const Transactions: FC<InnerProps> = ({ items }) => {
@@ -75,11 +69,12 @@ const Transactions: FC<InnerProps> = ({ items }) => {
 
   return (
     <FlipMove duration={1000} staggerDurationBy={0}>
-      {items.map((transaction) => (
-        <div key={transaction.hash}>
-          <TransactionAction transaction={transaction} />
-        </div>
-      ))}
+      {items &&
+        items.map((transaction) => (
+          <div key={transaction.hash}>
+            <TransactionAction transaction={transaction} />
+          </div>
+        ))}
     </FlipMove>
   );
 };
