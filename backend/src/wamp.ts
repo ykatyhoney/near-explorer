@@ -281,7 +281,9 @@ function setupWamp(): () => Promise<autobahn.Session> {
         openEventEmitter.emit("opened", session);
         resolve(session);
         currentSessionPromise = Promise.resolve(session);
-        console.log("WAMP connection is established. Waiting for commands...");
+        console.log(
+          "WAMP stress connection is established. Waiting for commands..."
+        );
 
         for (const [name, handler] of Object.entries(wampHandlers)) {
           const uri = `com.nearprotocol.${wampNearNetworkName}.explorer.${name}`;
