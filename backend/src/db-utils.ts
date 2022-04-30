@@ -3,7 +3,11 @@ import BN from "bn.js";
 import { PARTNER_LIST, DataSource, HOUR } from "./consts";
 import { nearStakingPoolAccountSuffix } from "./config";
 import { databases, withPool } from "./db";
-import { TransactionPagination, ValidatorTelemetry } from "./client-types";
+import {
+  OffsetPagination,
+  TransactionPagination,
+  ValidatorTelemetry,
+} from "./client-types";
 import { trimError } from "./utils";
 
 const ONE_DAY_TIMESTAMP_MILISEC = 24 * HOUR;
@@ -1603,6 +1607,35 @@ const queryGasUsedInChunks = async (blockHash: string) => {
   );
 };
 
+// FTs
+const queryFungibleTokensAmount = async () => {
+  const response = await querySingleRow<{ amount: string }>(
+    [
+      `SELECT
+        COUNT (DISTINCT emitted_by_contract_account_id) as amount
+      FROM assets__fungible_token_events
+      `,
+    ],
+    { dataSource: DataSource.Indexer }
+  );
+  return parseInt(response!.amount);
+};
+
+const queryFungibleTokens = async (pagination: OffsetPagination) => {
+  return await queryRows<{ id: string }, OffsetPagination>(
+    [
+      `SELECT
+        DISTINCT emitted_by_contract_account_id AS id FROM assets__fungible_token_events
+      ORDER BY id DESC
+      LIMIT :limit
+      OFFSET :offset
+      `,
+      pagination,
+    ],
+    { dataSource: DataSource.Indexer }
+  );
+};
+
 // node part
 export {
   queryOnlineNodesCount,
@@ -1687,3 +1720,6 @@ export {
 
 // chunks
 export { queryGasUsedInChunks };
+
+// FTs
+export { queryFungibleTokensAmount, queryFungibleTokens };

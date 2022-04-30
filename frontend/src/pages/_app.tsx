@@ -3,6 +3,7 @@ import NextApp, { AppContext, AppInitialProps } from "next/app";
 import Head from "next/head";
 import { NextRouter, useRouter } from "next/router";
 import * as React from "react";
+import * as ReactQuery from "react-query";
 
 import { getConfig, getNearNetwork, NearNetwork } from "../libraries/config";
 
@@ -94,14 +95,17 @@ const wrapRouterHandlerMaintainNetwork = (
 };
 
 type ContextProps = {
+  queryClient: ReactQuery.QueryClient;
   networkState: NetworkContext;
 };
 
 const AppContextWrapper: React.FC<ContextProps> = React.memo((props) => {
   return (
-    <NetworkContext.Provider value={props.networkState}>
-      {props.children}
-    </NetworkContext.Provider>
+    <ReactQuery.QueryClientProvider client={props.queryClient}>
+      <NetworkContext.Provider value={props.networkState}>
+        {props.children}
+      </NetworkContext.Provider>
+    </ReactQuery.QueryClientProvider>
   );
 });
 
@@ -130,6 +134,18 @@ const App: AppType = React.memo(
       [currentNearNetwork, nearNetworks]
     );
 
+    const [queryClient] = React.useState(
+      () =>
+        new ReactQuery.QueryClient({
+          defaultOptions: {
+            queries: {
+              refetchOnWindowFocus: false,
+              retry: false,
+            },
+          },
+        })
+    );
+
     return (
       <>
         <Head>
@@ -143,7 +159,10 @@ const App: AppType = React.memo(
             content="initial-scale=1.0, width=device-width"
           />
         </Head>
-        <AppContextWrapper networkState={networkState}>
+        <AppContextWrapper
+          queryClient={queryClient}
+          networkState={networkState}
+        >
           <AppWrapper>
             <Header />
             <BackgroundImage src="/static/images/explorer-bg.svg" />
