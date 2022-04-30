@@ -1,7 +1,7 @@
 import { Pool } from "pg";
 import BN from "bn.js";
 import { PARTNER_LIST, DataSource, HOUR } from "./consts";
-import { nearStakingPoolAccountSuffix } from "./config";
+import { config } from "./config";
 import { databases, withPool } from "./db";
 import { TransactionPagination, ValidatorTelemetry } from "./client-types";
 import { trimError } from "./utils";
@@ -205,7 +205,9 @@ const queryStakingPoolAccountIds = async (): Promise<string[]> => {
       [
         `SELECT account_id as "accountId"
     FROM accounts
-    WHERE account_id LIKE '%${nearStakingPoolAccountSuffix}'`,
+    WHERE account_id LIKE '%${
+      config.accountIdSuffix.stakingPool[config.networkName]
+    }'`,
       ],
       { dataSource: DataSource.Indexer }
     )
