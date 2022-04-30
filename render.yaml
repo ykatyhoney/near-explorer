@@ -10,21 +10,23 @@ services:
     startCommand: cd frontend && npm run start
     healthCheckPath: /api/ping
     envVars:
-      - key: NEAR_EXPLORER_WAMP_SSR_HOST
+      - key: NEAR_EXPLORER_PUBSUB_MAINNET_HOST
         fromService:
           type: web
-          name: wamp
-          property: host
-      - key: NEAR_EXPLORER_WAMP_HOST
-        fromService:
-          type: web
-          name: wamp
+          name: backend/mainnet
           envVarKey: RENDER_EXTERNAL_HOSTNAME
-      - key: NEAR_EXPLORER_WAMP_BACKEND_SECRET
+      - key: NEAR_EXPLORER_PUBSUB_TESNET_HOST
         fromService:
           type: web
-          name: wamp
-          envVarKey: NEAR_EXPLORER_WAMP_BACKEND_SECRET
+          name: backend/testnet
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
+      - key: NEAR_EXPLORER_PUBSUB_GUILDNET_HOST
+        fromService:
+          type: web
+          name: backend/guildnet
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
+      - key: NEAR_EXPLORER_PUBSUB_SECURE
+        value: true
 
       - fromGroup: frontend
 
@@ -54,84 +56,41 @@ services:
             }
           ]
 
-  ## Explorer WAMP
-  - type: web
-    name: wamp
-    env: docker
-    plan: pro
-    previewPlan: starter
-    dockerfilePath: ./wamp/Dockerfile
-    dockerContext: ./wamp
-    repo: https://github.com/near/near-explorer.git
-    envVars:
-      - key: NEAR_EXPLORER_WAMP_BACKEND_SECRET
-        generateValue: true
-
   ## Explorer backend [mainnet]
-  - type: worker
+  - type: web
     name: backend/mainnet
     env: node
     repo: https://github.com/near/near-explorer.git
     buildCommand: cd backend && npm clean-install && npm run build
     startCommand: cd backend && npm run start
+    healthCheckPath: /ping
     envVars:
-      - key: NEAR_EXPLORER_WAMP_HOST
-        fromService:
-          type: web
-          name: wamp
-          property: host
-      - key: NEAR_EXPLORER_WAMP_BACKEND_SECRET
-        fromService:
-          type: web
-          name: wamp
-          envVarKey: NEAR_EXPLORER_WAMP_BACKEND_SECRET
-
       - fromGroup: backend
       - fromGroup: backend/mainnet
       - fromGroup: backend/mainnet/secret
 
   ## Explorer backend [testnet]
-  - type: worker
+  - type: web
     name: backend/testnet
     env: node
     repo: https://github.com/near/near-explorer.git
     buildCommand: cd backend && npm clean-install && npm run build
     startCommand: cd backend && npm run start
+    healthCheckPath: /ping
     envVars:
-      - key: NEAR_EXPLORER_WAMP_HOST
-        fromService:
-          type: web
-          name: wamp
-          property: host
-      - key: NEAR_EXPLORER_WAMP_BACKEND_SECRET
-        fromService:
-          type: web
-          name: wamp
-          envVarKey: NEAR_EXPLORER_WAMP_BACKEND_SECRET
-
       - fromGroup: backend
       - fromGroup: backend/testnet
       - fromGroup: backend/testnet/secret
 
   ## Explorer backend [guildnet]
-  - type: worker
+  - type: web
     name: backend/guildnet
     env: node
     repo: https://github.com/near/near-explorer.git
     buildCommand: cd backend && npm clean-install && npm run build
     startCommand: cd backend && npm run start
+    healthCheckPath: /ping
     envVars:
-      - key: NEAR_EXPLORER_WAMP_HOST
-        fromService:
-          type: web
-          name: wamp
-          property: host
-      - key: NEAR_EXPLORER_WAMP_BACKEND_SECRET
-        fromService:
-          type: web
-          name: wamp
-          envVarKey: NEAR_EXPLORER_WAMP_BACKEND_SECRET
-
       - fromGroup: backend
       - fromGroup: backend/guildnet
       - fromGroup: backend/guildnet/secret
@@ -139,23 +98,15 @@ services:
 envVarGroups:
   - name: frontend
     envVars:
-      - key: NEAR_EXPLORER_WAMP_SECURE
-        value: true
-      - key: NEAR_EXPLORER_WAMP_SSR_SECURE
-        value: false
-      - key: NEAR_EXPLORER_WAMP_PORT
+      - key: NEAR_EXPLORER_PUBSUB_PORT
         value: 443
-      - key: NEAR_EXPLORER_WAMP_SSR_PORT
-        value: 10000
   - name: backend
     envVars:
-      - key: NEAR_EXPLORER_WAMP_SECURE
-        value: false
-      - key: NEAR_EXPLORER_WAMP_PORT
+      - key: NEAR_EXPLORER_PUBSUB_PORT
         value: 10000
   - name: backend/mainnet
     envVars:
-      - key: NEAR_EXPLORER_WAMP_NETWORK_NAME
+      - key: NEAR_EXPLORER_PUBSUB_NETWORK_NAME
         value: mainnet
       - key: NEAR_ARCHIVAL_RPC_URL
         value: https://archive-internal-rpc.mainnet.near.org/
@@ -175,7 +126,7 @@ envVarGroups:
         value: telemetry_mainnet
   - name: backend/testnet
     envVars:
-      - key: NEAR_EXPLORER_WAMP_NETWORK_NAME
+      - key: NEAR_EXPLORER_PUBSUB_NETWORK_NAME
         value: testnet
       - key: NEAR_ARCHIVAL_RPC_URL
         value: https://archive-internal-rpc.testnet.near.org/
@@ -195,7 +146,7 @@ envVarGroups:
         value: telemetry_testnet
   - name: backend/guildnet
     envVars:
-      - key: NEAR_EXPLORER_WAMP_NETWORK_NAME
+      - key: NEAR_EXPLORER_PUBSUB_NETWORK_NAME
         value: guildnet
       - key: NEAR_ARCHIVAL_RPC_URL
         value: https://rpc.openshards.io

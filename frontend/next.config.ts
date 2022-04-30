@@ -4,38 +4,23 @@ import {
   ExplorerConfig,
   NearNetwork,
 } from "./src/libraries/config";
+import { NetworkName } from "./src/types/common";
 
-const getWampHost = (isServer: boolean): string => {
-  const wampHost = process.env.NEAR_EXPLORER_WAMP_HOST || "localhost";
-  if (isServer) {
-    return process.env.NEAR_EXPLORER_WAMP_SSR_HOST || wampHost;
-  }
-  return wampHost;
-};
-
-const getWampPort = (isServer: boolean): number => {
-  const wampPort = Number(process.env.NEAR_EXPLORER_WAMP_PORT);
-  const wampPortNumber = isNaN(wampPort) ? 10000 : wampPort;
-  if (isServer) {
-    const wampSsrPort = Number(process.env.NEAR_EXPLORER_WAMP_SSR_PORT);
-    const wampSsrPortNumber = isNaN(wampSsrPort) ? undefined : wampSsrPort;
-    return wampSsrPortNumber || wampPortNumber;
-  }
-  return wampPortNumber;
-};
-
-const getWampSecure = (isServer: boolean): boolean => {
-  if (isServer && process.env.NEAR_EXPLORER_WAMP_SSR_SECURE) {
-    return process.env.NEAR_EXPLORER_WAMP_SSR_SECURE === "true";
-  }
-  return process.env.NEAR_EXPLORER_WAMP_SECURE === "true";
-};
-
-const getBackendConfig = (isServer: boolean): BackendConfig => {
+const getBackendConfig = (networkNames: NetworkName[]): BackendConfig => {
+  const pubSubPort = Number(process.env.NEAR_EXPLORER_PUBSUB_PORT);
+  const defaultHost = process.env.NEAR_EXPLORER_PUBSUB_HOST || "localhost";
   return {
-    host: getWampHost(isServer),
-    port: getWampPort(isServer),
-    secure: getWampSecure(isServer),
+    hosts: networkNames.reduce<Partial<Record<NetworkName, string>>>(
+      (acc, networkName) => {
+        const networkHost =
+          process.env[`NEAR_EXPLORER_PUBSUB_${networkName.toUpperCase()}_HOST`];
+        acc[networkName] = networkHost || defaultHost;
+        return acc;
+      },
+      {}
+    ),
+    port: isNaN(pubSubPort) ? 10000 : pubSubPort,
+    secure: process.env.NEAR_EXPLORER_PUBSUB_SECURE !== "false",
   };
 };
 
@@ -52,13 +37,14 @@ if (process.env.NEAR_NETWORKS) {
   ];
 }
 
+const networkNames = nearNetworks.map((network) => network.name);
 const config: ExplorerConfig & NextConfig = {
   serverRuntimeConfig: {
-    backendConfig: getBackendConfig(true),
+    backendConfig: getBackendConfig(networkNames),
   },
   publicRuntimeConfig: {
     nearNetworks,
-    backendConfig: getBackendConfig(false),
+    backendConfig: getBackendConfig(networkNames),
     googleAnalytics: process.env.NEAR_EXPLORER_GOOGLE_ANALYTICS,
   },
   webpack: (config, { isServer }) => {

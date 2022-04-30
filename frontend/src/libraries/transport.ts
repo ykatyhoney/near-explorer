@@ -1,5 +1,5 @@
-import { NearNetwork } from "./config";
-import { subscribeTopic, getLastValue, unsubscribeTopic, fetch } from "./wamp";
+import { getConfig, NearNetwork } from "./config";
+import { subscribeTopic, getLastValue, unsubscribeTopic } from "./pubsub";
 import {
   SubscriptionTopicType,
   SubscriptionTopicTypes,
@@ -41,7 +41,33 @@ export type Fetcher = <P extends ProcedureType>(
   args: ProcedureArgs<P>
 ) => Promise<ProcedureResult<P>>;
 
+export const fetchProcedure = async <P extends ProcedureType>(
+  procedure: P,
+  nearNetwork: NearNetwork,
+  args: ProcedureArgs<P>
+): Promise<ProcedureResult<P>> => {
+  const {
+    publicRuntimeConfig: { backendConfig },
+  } = getConfig();
+  const host = backendConfig.hosts[nearNetwork.name];
+  if (!host) {
+    throw new Error(`Network ${nearNetwork} is not supported on this host`);
+  }
+  const baseUrl = `${backendConfig.secure ? "https" : "http"}://${host}:${
+    backendConfig.port
+  }/`;
+  const response = await fetch(
+    baseUrl + procedure + `?network=${nearNetwork.name}`,
+    {
+      method: "POST",
+      body: JSON.stringify(args),
+    }
+  );
+  const json = await response.json();
+  return json as ProcedureResult<P>;
+};
+
 export const getFetcher = (nearNetwork: NearNetwork): Fetcher => (
   procedure,
   args
-) => fetch(procedure, nearNetwork, args);
+) => fetchProcedure(procedure, nearNetwork, args);

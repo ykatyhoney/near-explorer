@@ -10,7 +10,7 @@ const nearNetworks: NearNetwork[] = [
 ];
 
 const backendConfig = {
-  host: "this-could-be-anything",
+  hosts: { localhostnet: "this-could-be-anything" },
   port: 0,
   secure: false,
 };

@@ -97,28 +97,14 @@ const NETWORK_NAMES: Record<NetworkName, true> = {
 const isNetworkName = (value: string): value is NetworkName =>
   (Object.keys(NETWORK_NAMES) as NetworkName[]).includes(value as NetworkName);
 export const nearNetworkName = getEnvWithDefault(
-  "NEAR_EXPLORER_WAMP_NETWORK_NAME",
+  "NEAR_EXPLORER_PUBSUB_NETWORK_NAME",
   (value = "") => (isNetworkName(value) ? value : undefined),
   "localhostnet"
 );
 
-const isWampSecure = getEnvWithDefault(
-  "NEAR_EXPLORER_WAMP_SECURE",
-  (input) => input === "true",
-  false
-);
-const wampHost = getEnvStringWithDefault(
-  "NEAR_EXPLORER_WAMP_HOST",
-  "localhost"
-);
-const wampPort = getEnvNumberWithDefault("NEAR_EXPLORER_WAMP_PORT", 10000);
-export const wampNearExplorerUrl = `${
-  isWampSecure ? "wss" : "ws"
-}://${wampHost}:${wampPort}/ws`;
-
-export const wampNearExplorerBackendSecret = getEnvStringWithDefault(
-  "NEAR_EXPLORER_WAMP_BACKEND_SECRET",
-  "THIS_IS_LOCALHOST_SECRET"
+export const pubSubPort = getEnvNumberWithDefault(
+  "NEAR_EXPLORER_PUBSUB_PORT",
+  10000
 );
 
 export const nearLockupAccountIdSuffix = getEnvStringWithDefault(
