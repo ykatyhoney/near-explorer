@@ -6,6 +6,7 @@ import AccountDetails from "../../components/accounts/AccountDetails";
 import ContractDetails from "../../components/contracts/ContractDetails";
 import Transactions from "../../components/transactions/Transactions";
 import Content from "../../components/utils/Content";
+import AccountFungibleTokens from "../../components/accounts/AccountFungibleTokens";
 
 import TransactionIconSvg from "../../../public/static/images/icon-t-transactions.svg";
 
@@ -61,6 +62,7 @@ const AccountDetail: NextPage<Props> = React.memo(
               account_id: accountId,
             })
           )}
+          <AccountFungibleTokens accountId={accountId} />
         </Content>
         {accountError || accountFetchingError ? null : (
           <>

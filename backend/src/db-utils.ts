@@ -748,6 +748,44 @@ const queryAccountsList = async (
   );
 };
 
+const queryAccountFungibleTokenContractIds = async (
+  accountId: string,
+  limit: number,
+  offset: number
+): Promise<string[]> => {
+  return (
+    await queryRows<
+      {
+        contractId: string;
+      },
+      {
+        accountId: string;
+        limit: number;
+        offset: number;
+      }
+    >(
+      [
+        `SELECT DISTINCT emitted_by_contract_account_id as "contractId"
+       FROM assets__fungible_token_events
+       WHERE
+        token_new_owner_account_id = :accountId
+        OR
+        token_old_owner_account_id = :accountId
+       ORDER BY
+        emitted_by_contract_account_id DESC
+       LIMIT :limit
+       OFFSET :offset`,
+        {
+          accountId,
+          limit,
+          offset,
+        },
+      ],
+      { dataSource: DataSource.Indexer }
+    )
+  ).map(({ contractId }) => contractId);
+};
+
 async function queryOutcomeTransactionsCountFromAnalytics(
   accountId: string
 ): Promise<{
@@ -1646,6 +1684,7 @@ export {
   queryAccountOutcomeTransactionsCount,
   queryAccountIncomeTransactionsCount,
   queryAccountActivity,
+  queryAccountFungibleTokenContractIds,
 };
 
 // blocks
