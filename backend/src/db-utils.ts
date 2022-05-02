@@ -203,7 +203,7 @@ const queryStakingPoolAccountIds = async (): Promise<string[]> => {
   return (
     await queryRows<{ accountId: string }>(
       [
-        `SELECT account_id as "accountId"
+        `SELECT account_id AS "accountId"
     FROM accounts
     WHERE account_id LIKE '%${nearStakingPoolAccountSuffix}'`,
       ],
