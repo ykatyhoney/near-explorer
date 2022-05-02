@@ -2,6 +2,16 @@ import { merge } from "lodash";
 import { getOverrides, NetworkName } from "./client-types";
 import { HOUR, MINUTE, SECOND } from "./consts";
 
+/*
+To override a config parameter you should use a specific environment variable, following rules:
+
+- variable should be prefixed with NEAR_EXPLORER_CONFIG;
+- variable name should be CAPS_CASE'd target variable name;
+- going deep into object should be delimited with double underscore.
+
+For example, to override `config.accountIdSuffix.stakingPool.localhostnet` you should use variable
+NEAR_EXPLORER_CONFIG__ACCOUNT_ID_SUFFIX__STAKING_POOL__LOCALHOSTNET
+*/
 export const config = merge(
   {
     archivalRpcUrl: "http://localhost:3030",
