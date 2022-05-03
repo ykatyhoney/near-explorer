@@ -1,10 +1,12 @@
+import { Account } from "./account";
+import { AccountId, TransactionHash, UTCTimestamp } from "./nominal";
 import * as RPC from "./rpc";
 import { KeysOfUnion } from "./util";
 
-export type Account = {
+export type AccountOld = {
   accountId: string;
-  createdByTransactionHash?: string;
-  createdAtBlockTimestamp?: number;
+  createdByTransactionHash: TransactionHash;
+  createdAtBlockTimestamp: UTCTimestamp;
   deletedByTransactionHash?: string;
   deletedAtBlockTimestamp?: number;
 
@@ -183,9 +185,13 @@ export type TransactionCountHistory = {
 };
 
 export type ProcedureTypes = {
+  account: {
+    args: [AccountId];
+    result: Account | null;
+  };
   "account-info": {
     args: [string];
-    result: Account | null;
+    result: AccountOld | null;
   };
   "account-transactions-count": {
     args: [string];
